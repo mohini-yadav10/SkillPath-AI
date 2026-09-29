@@ -1,0 +1,37 @@
+{
+    "mastery_model": {
+        "name": "Logistic Regression (Skill Mastery)",
+        "version": "1.0.0",
+        "training_date": "2026-09-29T19:17:26.169317",
+        "features": [
+            "current_proficiency",
+            "previous_attempts",
+            "learning_time_mins",
+            "consistency_score"
+        ],
+        "evaluation_metrics": {
+            "accuracy": 0.8,
+            "precision": 0.8155,
+            "recall": 0.9384,
+            "f1_score": 0.8726
+        },
+        "dataset_type": "synthetic_prototype_only"
+    },
+    "performance_model": {
+        "name": "Random Forest Regressor (Performance Trend)",
+        "version": "1.0.0",
+        "training_date": "2026-09-29T19:17:26.376385",
+        "features": [
+            "score_1",
+            "score_2",
+            "score_3",
+            "days_since_last"
+        ],
+        "evaluation_metrics": {
+            "mae": 2.6598,
+            "rmse": 3.4348,
+            "r2": 0.9644
+        },
+        "dataset_type": "synthetic_prototype_only"
+    }
+}
