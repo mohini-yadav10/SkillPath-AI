@@ -1,4 +1,4 @@
-# SkillPath AI 🚀
+﻿# SkillPath AI 🚀
 
 An AI-Powered Personalized Learning & Career Skill-Gap Prediction Platform.
 
@@ -35,7 +35,7 @@ cd backend
 npm install
 ```
 
-Create a `.env` file in the `backend` folder (you can copy `.env.example`):
+Create a `.env` file in the `backend` folder:
 ```env
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
@@ -45,11 +45,8 @@ NODE_ENV=development
 
 Start the backend server:
 ```bash
-# Standard command:
 npm run dev
-
-# Windows workaround (if your folder path contains special characters like '&'):
-node node_modules/tsx/dist/cli.mjs watch src/server.ts
+# OR: node node_modules/tsx/dist/cli.mjs watch src/server.ts
 ```
 
 ### 2. Frontend Setup
@@ -61,11 +58,8 @@ npm install
 
 Start the frontend UI:
 ```bash
-# Standard command:
 npm run dev
-
-# Windows workaround (if your folder path contains special characters like '&'):
-node node_modules/vite/bin/vite.js
+# OR: node node_modules/vite/bin/vite.js
 ```
 The application will be running at `http://localhost:5173`.
 
@@ -73,16 +67,16 @@ The application will be running at `http://localhost:5173`.
 ```bash
 cd ml-service
 python -m venv venv
-source venv/bin/activate  # (or `venv\Scripts\activate` on Windows)
+source venv/bin/activate
 pip install -r requirements.txt
 python main.py
 ```
 
 ## 🧪 Demo Mode
-If you want to quickly test the application without creating manual profiles:
+To quickly test without creating manual profiles:
 1. Ensure your MongoDB Atlas URI is configured.
 2. Run the seeder script from the backend folder:
    ```bash
    node node_modules/tsx/dist/cli.mjs src/scripts/seedAaravDemo.ts
    ```
-3. Go to the Login page (`http://localhost:5173/login`) and click either the **"Load DEMO MODE (Student)"** or **"Load ADMIN DEMO"** button to instantly authenticate.
+3. Go to the Login page (`http://localhost:5173/login`) and click the **"Load DEMO MODE (Student)"** button.
