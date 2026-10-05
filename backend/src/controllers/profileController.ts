@@ -7,7 +7,9 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
   try {
     const userId = (req as any).user.id;
     let profile = await StudentProfile.findOne({ userId })
-      .populate('skills.skillId');
+      .populate('skills.skillId')
+      .populate('targetRole')
+      .populate('targetCompany');
 
     if (!profile) {
       profile = await StudentProfile.create({ userId, skills: [] });

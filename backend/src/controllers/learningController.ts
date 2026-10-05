@@ -98,6 +98,11 @@ export const getPath = async (req: Request, res: Response, next: NextFunction) =
 
     const path = await LearningPath.findOne({ studentId: profile._id }).sort({ createdAt: -1 });
 
+    // If the path belongs to an old target role, do not return it
+    if (path && profile.targetRole && path.targetRoleId.toString() !== profile.targetRole.toString()) {
+      return res.status(200).json({ success: true, data: null });
+    }
+
     res.status(200).json({ success: true, data: path });
   } catch (error) {
     next(error);

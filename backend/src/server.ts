@@ -15,6 +15,9 @@ import assessmentRoutes from './routes/assessmentRoutes';
 import resumeRoutes from './routes/resumeRoutes';
 import mentorshipRoutes from './routes/mentorshipRoutes';
 import adminRoutes from './routes/adminRoutes';
+import interviewRoutes from './routes/interviewRoutes';
+import proctoringRoutes from './routes/proctoringRoutes';
+import analyticsRoutes from './routes/analyticsRoutes';
 
 dotenv.config();
 
@@ -40,6 +43,9 @@ app.use('/api/assessments', assessmentRoutes);
 app.use('/api/resume', resumeRoutes);
 app.use('/api/mentorship', mentorshipRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/interview', interviewRoutes);
+app.use('/api/proctoring', proctoringRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Health check
 app.get('/health', (req: Request, res: Response) => {

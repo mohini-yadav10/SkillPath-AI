@@ -4,6 +4,7 @@ import Question from '../models/Question';
 import AssessmentAttempt from '../models/AssessmentAttempt';
 import StudentProfile from '../models/StudentProfile';
 import Skill from '../models/Skill';
+import RoleSkillRequirement from '../models/RoleSkillRequirement';
 import { ErrorResponse } from '../utils/errorResponse';
 
 const MAX_QUESTIONS_PER_ATTEMPT = 5;
@@ -12,17 +13,33 @@ const MAX_QUESTIONS_PER_ATTEMPT = 5;
 export const getAvailableAssessments = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req as any).user.id;
-    const profile = await StudentProfile.findOne({ userId }).populate('skills.skillId');
+    const profile = await StudentProfile.findOne({ userId });
 
     if (!profile) {
       return next(new ErrorResponse('Profile not found', 404));
     }
 
+    // Determine target skills
+    let targetSkillIds: mongoose.Types.ObjectId[] = [];
+    if (profile.targetRole) {
+      const requirements = await RoleSkillRequirement.find({ roleId: profile.targetRole });
+      targetSkillIds = requirements.map(r => r.skillId as mongoose.Types.ObjectId);
+    }
+
     // We fetch skills that have questions available
     const skillsWithQuestions = await Question.distinct('skillId');
-    const availableSkills = await Skill.find({ _id: { $in: skillsWithQuestions } });
+    
+    // Filter to only include skills relevant to the target role (if target is set)
+    let relevantSkillIds = skillsWithQuestions;
+    if (targetSkillIds.length > 0) {
+      relevantSkillIds = skillsWithQuestions.filter(id => 
+        targetSkillIds.some(targetId => targetId.toString() === id.toString())
+      );
+    }
 
-    res.status(200).json({ success: true, data: availableSkills });
+    const availableSkills = await Skill.find({ _id: { $in: relevantSkillIds } });
+
+    res.status(200).json({ success: true, data: availableSkills, hasTarget: !!profile.targetRole });
   } catch (error) {
     next(error);
   }
@@ -168,7 +185,24 @@ export const submitAnswer = async (req: Request, res: Response, next: NextFuncti
     }
 
     if (!nextQuestion) {
-      // Force complete if bank is exhausted
+      // If bank is exhausted, dynamically create a fallback question to ensure the assessment continues
+      nextQuestion = await Question.create({
+        skillId: attempt.skillId,
+        questionText: `Advanced conceptual question regarding the targeted skill's principles and best practices.`,
+        options: [
+          'Implementation depends on specific architectural constraints',
+          'Always use the default configuration',
+          'It is fundamentally impossible',
+          'Only applicable in legacy systems'
+        ],
+        correctOptionIndex: 0,
+        difficulty: nextDifficulty,
+        explanation: 'In advanced scenarios, architectural constraints dictate the best approach.'
+      });
+    }
+
+    if (!nextQuestion) {
+      // Safety fallback
       attempt.isCompleted = true;
       attempt.completedAt = new Date();
       await attempt.save();

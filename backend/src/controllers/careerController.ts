@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import Company from '../models/Company';
 import JobRole from '../models/JobRole';
 import StudentProfile from '../models/StudentProfile';
+import mongoose from 'mongoose';
 import { ErrorResponse } from '../utils/errorResponse';
 
 export const getCompanies = async (req: Request, res: Response, next: NextFunction) => {
@@ -59,11 +60,22 @@ export const getTargetCareer = async (req: Request, res: Response, next: NextFun
       return res.status(200).json({ success: true, data: null });
     }
 
+    let requiredSkills = [];
+    if (profile.targetRole) {
+      // Need to import RoleSkillRequirement at the top if not already, wait, it's not imported!
+      // Let me just send the IDs or I can add the import.
+      const reqs = await mongoose.model('RoleSkillRequirement').find({ roleId: (profile.targetRole as any)._id }).populate('skillId');
+      requiredSkills = reqs.map(r => r.skillId);
+    }
+
     res.status(200).json({ 
       success: true, 
       data: {
-        targetCompany: profile.targetCompany,
-        targetRole: profile.targetRole
+        roleId: profile.targetRole ? (profile.targetRole as any)._id : null,
+        roleName: profile.targetRole ? (profile.targetRole as any).title : null,
+        companyId: profile.targetCompany ? (profile.targetCompany as any)._id : null,
+        companyName: profile.targetCompany ? (profile.targetCompany as any).name : null,
+        requiredSkills
       }
     });
   } catch (error) {

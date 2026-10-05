@@ -45,15 +45,15 @@ export default function ResumeAnalysis() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">Resume NLP Extraction</h1>
-        <p className="text-gray-500">Upload your PDF resume to automatically populate your skill profile.</p>
+        <h1 className="text-2xl font-bold text-ink">Resume NLP Extraction</h1>
+        <p className="text-muted">Upload your PDF resume to automatically populate your skill profile.</p>
       </div>
 
-      <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200">
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
-          <Upload className="mx-auto text-gray-400 mb-4" size={48} />
-          <h3 className="text-lg font-medium text-gray-800 mb-2">Drag & drop your resume</h3>
-          <p className="text-sm text-gray-500 mb-4">or click to browse (PDF only, max 5MB)</p>
+      <div className="bg-white p-8 rounded-lg shadow-sm border border-sage/20">
+        <div className="border-2 border-dashed border-sage/30 rounded-lg p-12 text-center">
+          <Upload className="mx-auto text-muted mb-4" size={48} />
+          <h3 className="text-lg font-medium text-ink mb-2">Drag & drop your resume</h3>
+          <p className="text-sm text-muted mb-4">or click to browse (PDF only, max 5MB)</p>
           
           <input
             type="file"
@@ -64,22 +64,22 @@ export default function ResumeAnalysis() {
           />
           <label 
             htmlFor="resume-upload"
-            className="cursor-pointer bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded shadow-sm hover:bg-gray-50"
+            className="cursor-pointer bg-white border border-sage/30 text-forest-dark px-4 py-2 rounded shadow-sm hover:bg-cream"
           >
             Select PDF File
           </label>
         </div>
 
         {file && (
-          <div className="mt-6 flex items-center justify-between p-4 bg-blue-50 border border-blue-100 rounded">
+          <div className="mt-6 flex items-center justify-between p-4 bg-sage/10 border border-sage/20 rounded">
             <div className="flex items-center gap-3">
-              <FileText className="text-blue-500" size={24} />
+              <FileText className="text-forest" size={24} />
               <span className="font-medium text-blue-900">{file.name}</span>
             </div>
             <button
               onClick={handleUpload}
               disabled={loading}
-              className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 disabled:bg-blue-400"
+              className="bg-forest text-white px-4 py-2 rounded shadow hover:bg-forest-dark disabled:bg-blue-400"
             >
               {loading ? 'Analyzing...' : 'Extract Skills'}
             </button>
@@ -103,13 +103,13 @@ export default function ResumeAnalysis() {
             </div>
 
             <div>
-              <h3 className="text-md font-bold text-gray-800 mb-3">Extracted Skills</h3>
+              <h3 className="text-md font-bold text-ink mb-3">Extracted Skills</h3>
               {result.extractedSkills.length === 0 ? (
-                <p className="text-gray-500 italic">No exact skill matches found. Try adding skills manually in your profile.</p>
+                <p className="text-muted italic">No exact skill matches found. Try adding skills manually in your profile.</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {result.extractedSkills.map((skill: any, idx: number) => (
-                    <span key={idx} className="bg-gray-100 text-gray-700 border border-gray-200 px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                    <span key={idx} className="bg-sage/10 text-forest-dark border border-sage/20 px-3 py-1 rounded-full text-sm flex items-center gap-2">
                       {skill.name}
                       <span className="bg-yellow-100 text-yellow-800 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase">
                         Unverified
@@ -120,7 +120,7 @@ export default function ResumeAnalysis() {
               )}
             </div>
 
-            <div className="bg-gray-50 p-4 rounded text-sm text-gray-600">
+            <div className="bg-cream p-4 rounded text-sm text-forest-dark/70">
               <span className="font-bold">Note:</span> We do not blindly trust extracted skills. These have been added to your profile with a "Resume" source tag and a 50% confidence score. You must verify them via adaptive assessments to increase your Career Readiness Score.
             </div>
           </div>

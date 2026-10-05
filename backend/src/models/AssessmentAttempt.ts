@@ -16,6 +16,20 @@ export interface IAssessmentAttempt extends Document {
   totalTimeTaken: number;
   startedAt: Date;
   completedAt?: Date;
+  isProctored?: boolean;
+  proctoring?: {
+    status: 'SETUP' | 'ACTIVE' | 'AWAITING_REVIEW' | 'REVIEWED';
+    events: Array<{
+      eventType: string;
+      severity: 'LOW_REVIEW' | 'MEDIUM_REVIEW' | 'HIGH_REVIEW' | 'CLEAR';
+      confidence: number;
+      timestamp: Date;
+      description: string;
+    }>;
+    reviewStatus?: 'APPROVED' | 'REJECTED' | 'REQUEST_RETEST' | 'PENDING';
+    reviewerNotes?: string;
+    lastHeartbeat?: Date;
+  };
 }
 
 const assessmentAttemptSchema = new Schema(
@@ -36,7 +50,21 @@ const assessmentAttemptSchema = new Schema(
     accuracy: { type: Number, default: 0 },
     totalTimeTaken: { type: Number, default: 0 },
     startedAt: { type: Date, default: Date.now },
-    completedAt: { type: Date }
+    completedAt: { type: Date },
+    isProctored: { type: Boolean, default: false },
+    proctoring: {
+      status: { type: String, enum: ['SETUP', 'ACTIVE', 'AWAITING_REVIEW', 'REVIEWED'], default: 'SETUP' },
+      events: [{
+        eventType: { type: String },
+        severity: { type: String, enum: ['LOW_REVIEW', 'MEDIUM_REVIEW', 'HIGH_REVIEW', 'CLEAR'] },
+        confidence: { type: Number },
+        timestamp: { type: Date, default: Date.now },
+        description: { type: String }
+      }],
+      reviewStatus: { type: String, enum: ['APPROVED', 'REJECTED', 'REQUEST_RETEST', 'PENDING'], default: 'PENDING' },
+      reviewerNotes: { type: String },
+      lastHeartbeat: { type: Date }
+    }
   },
   { timestamps: true }
 );

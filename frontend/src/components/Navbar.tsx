@@ -13,9 +13,9 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200 py-4">
+    <nav className="bg-white shadow-sm border-b border-sage/20 py-4">
       <div className="container mx-auto px-4 flex justify-between items-center">
-        <Link to="/" className="text-xl font-bold text-blue-600 flex items-center gap-2">
+        <Link to="/" className="text-xl font-bold text-forest flex items-center gap-2">
           <span>SkillPath AI</span>
         </Link>
         <div className="flex items-center gap-6">
@@ -23,19 +23,20 @@ const Navbar = () => {
             <>
               {user.role === 'ADMIN' ? (
                 <div className="hidden md:flex gap-4">
-                  <Link to="/admin" className="text-gray-700 hover:text-blue-600 font-medium text-sm">Admin Dashboard</Link>
+                  <Link to="/admin" className="text-forest-dark hover:text-forest font-medium text-sm">Admin Dashboard</Link>
                 </div>
               ) : (
                 <div className="hidden md:flex gap-4">
-                  <Link to="/dashboard" className="text-gray-700 hover:text-blue-600 font-medium text-sm">Dashboard</Link>
-                  <Link to="/career" className="text-gray-700 hover:text-blue-600 font-medium text-sm">Target Role</Link>
-                  <Link to="/learning" className="text-gray-700 hover:text-blue-600 font-medium text-sm">Learning Path</Link>
-                  <Link to="/assessment" className="text-gray-700 hover:text-blue-600 font-medium text-sm">Assessments</Link>
-                  <Link to="/network" className="text-gray-700 hover:text-blue-600 font-medium text-sm">Network</Link>
-                  <Link to="/profile" className="text-gray-700 hover:text-blue-600 font-medium text-sm">Profile</Link>
+                  <Link to="/dashboard" className="text-forest-dark hover:text-forest font-medium text-sm">Dashboard</Link>
+                  <Link to="/career" className="text-forest-dark hover:text-forest font-medium text-sm">Target Role</Link>
+                  <Link to="/learning" className="text-forest-dark hover:text-forest font-medium text-sm">Learning Path</Link>
+                  <Link to="/interview" className="text-forest-dark hover:text-forest font-medium text-sm">Interviews</Link>
+                  <Link to="/assessment" className="text-forest-dark hover:text-forest font-medium text-sm">Assessments</Link>
+                  <Link to="/network" className="text-forest-dark hover:text-forest font-medium text-sm">Network</Link>
+                  <Link to="/profile" className="text-forest-dark hover:text-forest font-medium text-sm">Profile</Link>
                 </div>
               )}
-              <span className="text-sm text-gray-600 flex items-center gap-2 border-l pl-4 border-gray-300">
+              <span className="text-sm text-forest-dark/70 flex items-center gap-2 border-l pl-4 border-sage/30">
                 <UserIcon size={16} /> {user.firstName}
               </span>
               <button 
@@ -47,8 +48,8 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <Link to="/login" className="text-sm font-medium text-gray-700 hover:text-blue-600">Login</Link>
-              <Link to="/register" className="text-sm font-medium bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Register</Link>
+              <Link to="/login" className="text-sm font-medium text-forest-dark hover:text-forest">Login</Link>
+              <Link to="/register" className="text-sm font-medium bg-forest text-white px-4 py-2 rounded-md hover:bg-forest-dark">Register</Link>
             </>
           )}
         </div>

@@ -16,11 +16,6 @@ export const calculateSkillGap = async (req: Request, res: Response, next: NextF
     // Fetch role requirements
     const requirements = await RoleSkillRequirement.find({ roleId: profile.targetRole }).populate('skillId');
 
-    if (!requirements || requirements.length === 0) {
-      // In a real scenario we might fallback to generic requirements
-      return next(new ErrorResponse('No skill requirements found for the target role.', 404));
-    }
-
     const gaps = [];
     let matchedSkillsCount = 0;
     let criticalGapsCount = 0;
@@ -80,6 +75,9 @@ export const calculateSkillGap = async (req: Request, res: Response, next: NextF
       gaps
     });
 
+    profile.careerReadinessScore = readinessScore;
+    await profile.save();
+
     res.status(200).json({ success: true, data: analysis });
   } catch (error) {
     next(error);
@@ -89,16 +87,22 @@ export const calculateSkillGap = async (req: Request, res: Response, next: NextF
 export const getLatestAnalysis = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req as any).user.id;
-    const profile = await StudentProfile.findOne({ userId });
+    const profile = await StudentProfile.findOne({ userId }).populate('targetCompany');
 
     if (!profile) {
       return res.status(200).json({ success: true, data: null });
     }
 
     const analysis = await SkillGapAnalysis.findOne({ studentId: profile._id })
+      .populate('roleId')
       .sort({ createdAt: -1 }); // Get the latest one
 
-    res.status(200).json({ success: true, data: analysis });
+    let analysisObj = analysis ? analysis.toObject() : null;
+    if (analysisObj) {
+      analysisObj.targetCompany = profile.targetCompany;
+    }
+
+    res.status(200).json({ success: true, data: analysisObj });
   } catch (error) {
     next(error);
   }

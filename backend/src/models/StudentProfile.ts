@@ -14,6 +14,12 @@ export interface IStudentProfile extends Document {
   careerReadinessScore?: number;
   resumeUrl?: string;
   skills: IStudentSkill[];
+  
+  // Gamification fields
+  xp: number;
+  level: number;
+  learningStreak: number;
+  lastActivityDate?: Date;
 }
 
 const studentSkillSchema = new Schema({
@@ -30,7 +36,11 @@ const studentProfileSchema = new Schema(
     targetCompany: { type: Schema.Types.ObjectId, ref: 'Company' },
     careerReadinessScore: { type: Number, min: 0, max: 100, default: 0 },
     resumeUrl: { type: String },
-    skills: [studentSkillSchema]
+    skills: [studentSkillSchema],
+    xp: { type: Number, default: 0 },
+    level: { type: Number, default: 1 },
+    learningStreak: { type: Number, default: 0 },
+    lastActivityDate: { type: Date }
   },
   { timestamps: true }
 );

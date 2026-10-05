@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Clock } from 'lucide-react';
 
-export default function AssessmentActive() {
+export default function AssessmentActive({ isWrapped, isPaused, onEndAssessment }: { isWrapped?: boolean, isPaused?: boolean, onEndAssessment?: () => void }) {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
@@ -16,6 +16,7 @@ export default function AssessmentActive() {
 
   // Timer effect
   useEffect(() => {
+    if (isPaused) return; // Do not tick timer if paused
     if (timeLeft <= 0) {
       handleSubmit(true);
       return;
@@ -24,7 +25,7 @@ export default function AssessmentActive() {
       setTimeLeft((prev: number) => prev - 1);
     }, 1000);
     return () => clearInterval(timerId);
-  }, [timeLeft]);
+  }, [timeLeft, isPaused]);
 
   const handleSubmit = async (isTimeOut = false) => {
     if (selectedOption === null && !isTimeOut) return;
@@ -62,21 +63,21 @@ export default function AssessmentActive() {
   return (
     <div className="max-w-3xl mx-auto mt-10">
       <div className="flex justify-between items-center mb-6">
-        <div className="text-sm font-bold text-gray-500 uppercase tracking-wider">
+        <div className="text-sm font-bold text-muted uppercase tracking-wider">
           Question {progress.current} of {progress.total}
         </div>
-        <div className={`flex items-center gap-2 font-bold px-3 py-1 rounded ${timeLeft <= 10 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-700'}`}>
+        <div className={`flex items-center gap-2 font-bold px-3 py-1 rounded ${timeLeft <= 10 ? 'bg-red-100 text-red-600' : 'bg-sage/10 text-forest-dark'}`}>
           <Clock size={16} /> 00:{timeLeft.toString().padStart(2, '0')}
         </div>
       </div>
 
-      <div className="w-full bg-gray-200 rounded-full h-1.5 mb-8">
-        <div className="bg-blue-600 h-1.5 rounded-full" style={{ width: `${(progress.current / progress.total) * 100}%` }}></div>
+      <div className="w-full bg-sage/20 rounded-full h-1.5 mb-8">
+        <div className="bg-forest h-1.5 rounded-full" style={{ width: `${(progress.current / progress.total) * 100}%` }}></div>
       </div>
 
-      <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+      <div className="bg-white p-8 rounded-xl shadow-sm border border-sage/20">
         <div className="flex justify-between items-start mb-6">
-          <h2 className="text-xl font-medium text-gray-800">{question.questionText}</h2>
+          <h2 className="text-xl font-medium text-ink">{question.questionText}</h2>
           <span className={`text-xs font-bold px-2 py-1 rounded ${question.difficulty === 'HARD' ? 'bg-red-100 text-red-700' : question.difficulty === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'}`}>
             {question.difficulty}
           </span>
@@ -87,7 +88,7 @@ export default function AssessmentActive() {
             <button
               key={idx}
               onClick={() => setSelectedOption(idx)}
-              className={`w-full text-left p-4 rounded-lg border transition-all ${selectedOption === idx ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200' : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'}`}
+              className={`w-full text-left p-4 rounded-lg border transition-all ${selectedOption === idx ? 'border-forest bg-sage/10 ring-2 ring-blue-200' : 'border-sage/20 hover:border-blue-300 hover:bg-cream'}`}
             >
               {opt}
             </button>
@@ -98,7 +99,7 @@ export default function AssessmentActive() {
           <button 
             onClick={() => handleSubmit()}
             disabled={selectedOption === null}
-            className="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 transition-colors"
+            className="bg-forest text-white px-8 py-3 rounded-lg font-medium hover:bg-forest-dark disabled:bg-sage/30 transition-colors"
           >
             Submit & Next
           </button>

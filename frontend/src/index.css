@@ -1,10 +1,61 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@theme {
+  --color-forest: var(--color-forest-theme);
+  --color-forest-dark: var(--color-forest-dark-theme);
+  --color-sage: var(--color-sage-theme);
+  --color-cream: var(--color-cream-theme);
+  --color-gold: var(--color-gold-theme);
+  --color-coral: var(--color-coral-theme);
+  --color-ink: var(--color-ink-theme);
+  --color-muted: var(--color-muted-theme);
+  --color-white: var(--color-white-theme);
+  
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+:root {
+  --color-forest-theme: #163C35;
+  --color-forest-dark-theme: #0A221E;
+  --color-sage-theme: #7FA99B;
+  --color-cream-theme: #F7F7F2;
+  --color-gold-theme: #D6A84A;
+  --color-coral-theme: #E98A76;
+  --color-ink-theme: #1E2926;
+  --color-muted-theme: #71807B;
+  --color-white-theme: #FFFFFF;
+}
+
+.dark {
+  --color-forest-theme: #8FB8AA; /* Lighter sage/green for contrast */
+  --color-forest-dark-theme: #DCEBE5; 
+  --color-sage-theme: #2C4A42; /* Darker sage for borders/subtle backgrounds */
+  --color-cream-theme: #08100E; /* Very dark background */
+  --color-gold-theme: #E3B341;
+  --color-coral-theme: #E98A76;
+  --color-ink-theme: #F7F7F2; /* Light text */
+  --color-muted-theme: #627A73;
+  --color-white-theme: #11211D; /* Dark surface for cards */
+}
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-cream);
+  color: var(--color-ink);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--color-sage);
+  border-radius: 20px;
 }
