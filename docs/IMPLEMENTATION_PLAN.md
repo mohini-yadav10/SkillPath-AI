@@ -33,10 +33,14 @@
 1.  **Document Upload & Extraction:** Implemented PDF/TXT syllabus & notes parsing with overlapping semantic chunking and metadata keyword extraction (`StudentDocument` model & `/api/mentor/documents`).
 2.  **AI Mentor Chat UI:** Built full-fidelity, persistent AI Career Mentor chat (`AIMentor.tsx` & `/api/mentor/chat`) combining RAG document snippet citations with real-time Career Twin grounding.
 
-## PHASE E: Advanced AI Interviewer & Assessment
-*Status: NEXT UP*
-1.  **Dynamic Interviews:** Upgrade existing interview controllers to analyze weaknesses mid-session and generate adaptive follow-up questions.
-2.  **Assessment Data Feed:** Ensure assessment performance routes explicitly feed back into the Career Twin and Adaptive Roadmap engines.
+## PHASE E: Advanced AI Interviewer & Assessment Engine + Source-Attributed Company Question Bank
+*Status: COMPLETED*
+1.  **Source & Provenance Registry:** Implemented `InterviewSource` model with SSRF protection, tracking source metadata, verification status (`VERIFIED`, `SOURCE_REVIEWED`, `UNVERIFIED`), reuse permissions, and content hashes. Sourced candidate-reported TCS MERN interview experiences with accurate attribution.
+2.  **Extended Question Model & Canonical Taxonomy:** Upgraded `InterviewQuestion` with `sourceType`, `interviewRound`, `codeTestCase`, `selectionReason`, `rubricCriteria`, and canonical MERN skill taxonomy (`SkillTaxonomyService`) with Java vs JavaScript disambiguation.
+3.  **Adaptive Interview Session Engine:** Implemented multi-mode interview sessions (`COMPANY_PRACTICE`, `SKILL_GAP_PRACTICE`, `ADAPTIVE_MOCK`, `TOPIC_PRACTICE`), deterministic rubric scoring, and dynamic follow-up question generation targeting detected answer weaknesses.
+4.  **Feedback Loop & Career Twin Telemetry:** Synchronized interview performance into `StudentProfile.interviewStats`, recalibrated proficiencies, recalculated `SkillGapAnalysis` and `CareerTwin`, and injected prerequisite-ordered remediation labs into `LearningPath` with deduplication and clear recommendation explanations.
+5.  **Question Bank & UI Upgrades:** Built `QuestionBankLibrary.tsx` with multi-dimensional filtering, upgraded `InterviewSetup.tsx`, `InterviewActive.tsx`, `InterviewResult.tsx`, and `InterviewDashboard.tsx` in strict Forest-Green/Sage/Gold design system.
+6.  **Comprehensive Automated Tests:** 33 backend tests passing across 6 test suites, verifying provenance, ingestion dry-run, question library filtering, adaptive follow-ups, Career Twin updates, roadmap prerequisite ordering, and attempt ownership security. Frontend Vite production build passing cleanly.
 
 ## PHASE F: Career Readiness ML Engine
 1.  **ML Pipeline:** Shift the readiness score from heuristic-based to feature-based using the Python ML service.

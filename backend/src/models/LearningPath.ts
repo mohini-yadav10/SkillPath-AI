@@ -14,6 +14,7 @@ export interface ILearningPathItem {
   isAdaptiveRemediation?: boolean;
   priority?: 'HIGH' | 'MEDIUM' | 'LOW';
   milestone?: string;
+  recommendationReason?: string;
 }
 
 export interface ILearningPath extends Document {
@@ -39,7 +40,8 @@ const learningPathItemSchema = new Schema({
   estimatedHours: { type: Number, default: 10 },
   isAdaptiveRemediation: { type: Boolean, default: false },
   priority: { type: String, enum: ['HIGH', 'MEDIUM', 'LOW'], default: 'MEDIUM' },
-  milestone: { type: String, default: 'Core Milestone' }
+  milestone: { type: String, default: 'Core Milestone' },
+  recommendationReason: { type: String }
 });
 
 const learningPathSchema = new Schema(

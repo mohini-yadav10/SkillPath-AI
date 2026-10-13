@@ -46,6 +46,9 @@ export interface IStudentProfile extends Document {
     averageScore: number;
     technicalRating: number;
     communicationRating: number;
+    highestScore?: number;
+    lastInterviewScore?: number;
+    lastInterviewDate?: Date;
   };
   careerTwin?: ICareerTwinData;
   
@@ -86,7 +89,10 @@ const studentProfileSchema = new Schema(
       totalInterviews: { type: Number, default: 0 },
       averageScore: { type: Number, default: 0 },
       technicalRating: { type: Number, default: 0 },
-      communicationRating: { type: Number, default: 0 }
+      communicationRating: { type: Number, default: 0 },
+      highestScore: { type: Number, default: 0 },
+      lastInterviewScore: { type: Number, default: 0 },
+      lastInterviewDate: { type: Date }
     },
     careerTwin: {
       archetype: { type: String, default: 'Aspiring Engineer' },

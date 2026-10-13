@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import StudentProfile from '../models/StudentProfile';
 import RoleSkillRequirement from '../models/RoleSkillRequirement';
 import SkillGapAnalysis, { ISkillGapItem } from '../models/SkillGapAnalysis';
@@ -86,133 +87,148 @@ const synthesizeCareerTwin = (profile: any, readinessScore: number, gaps: any[])
   };
 };
 
+export const performSkillGapCalculation = async (profileId: mongoose.Types.ObjectId | string) => {
+  const profile = await StudentProfile.findById(profileId).populate('skills.skillId');
+  if (!profile || !profile.targetRole) {
+    return null;
+  }
+
+  // Fetch role requirements with populated skill prerequisites
+  const requirements = await RoleSkillRequirement.find({ roleId: profile.targetRole })
+    .populate({
+      path: 'skillId',
+      populate: { path: 'prerequisites' }
+    });
+
+  const gaps: ISkillGapItem[] = [];
+  let matchedSkillsCount = 0;
+  let criticalGapsCount = 0;
+  let totalScoreNumerator = 0;
+  let totalScoreDenominator = 0;
+
+  for (const reqSkill of requirements) {
+    const skillDoc = reqSkill.skillId as any;
+    if (!skillDoc) continue;
+    const skillName = skillDoc.name;
+    const studentSkill = profile.skills.find(
+      s => s.skillId && (s.skillId as any)._id.toString() === skillDoc._id.toString()
+    );
+
+    const currentProficiency = studentSkill ? studentSkill.proficiency : 0;
+    const requiredProficiency = reqSkill.minimumProficiency;
+    const gapSize = Math.max(0, requiredProficiency - currentProficiency);
+
+    let classification: 'MASTERED' | 'MINOR' | 'MODERATE' | 'MAJOR' | 'CRITICAL' = 'MASTERED';
+    if (gapSize > 40) classification = 'CRITICAL';
+    else if (gapSize > 25) classification = 'MAJOR';
+    else if (gapSize > 12) classification = 'MODERATE';
+    else if (gapSize > 0) classification = 'MINOR';
+
+    // Check prerequisites status
+    let isPrerequisiteMet = true;
+    if (skillDoc.prerequisites && skillDoc.prerequisites.length > 0) {
+      for (const prereq of skillDoc.prerequisites) {
+        const prereqSkill = profile.skills.find(
+          s => s.skillId && (s.skillId as any)._id.toString() === prereq._id.toString()
+        );
+        if (!prereqSkill || prereqSkill.proficiency < 50) {
+          isPrerequisiteMet = false;
+          break;
+        }
+      }
+    }
+
+    // Assign priority
+    let priority: 'HIGH' | 'MEDIUM' | 'LOW' = 'MEDIUM';
+    if ((reqSkill.importance === 'CRITICAL' || reqSkill.importance === 'IMPORTANT') && gapSize > 20) {
+      priority = 'HIGH';
+    } else if (gapSize <= 5 || reqSkill.importance === 'OPTIONAL') {
+      priority = 'LOW';
+    }
+
+    if (gapSize === 0) matchedSkillsCount++;
+    if (classification === 'CRITICAL' && reqSkill.importance === 'CRITICAL') criticalGapsCount++;
+
+    // Weighting for readiness score
+    let weight = 1;
+    if (reqSkill.importance === 'CRITICAL') weight = 3;
+    else if (reqSkill.importance === 'IMPORTANT') weight = 2;
+    else if (reqSkill.importance === 'OPTIONAL') weight = 0.5;
+
+    totalScoreNumerator += (Math.min(currentProficiency, requiredProficiency) / requiredProficiency) * weight;
+    totalScoreDenominator += weight;
+
+    const recommendation = generateRecommendation(skillName, gapSize, reqSkill.importance);
+    const estimatedHoursToClose = Math.max(4, Math.round(gapSize * 0.8));
+
+    gaps.push({
+      skillId: skillDoc._id,
+      skillName,
+      currentProficiency,
+      requiredProficiency,
+      gapSize,
+      classification,
+      importance: reqSkill.importance,
+      priority,
+      recommendation,
+      estimatedHoursToClose,
+      isPrerequisiteMet
+    });
+  }
+
+  let readinessScore = 0;
+  if (totalScoreDenominator > 0) {
+    readinessScore = Math.round((totalScoreNumerator / totalScoreDenominator) * 100);
+  }
+
+  // Sort gaps: HIGH priority first, then descending gap size
+  gaps.sort((a, b) => {
+    const pOrder: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+    if (pOrder[a.priority] !== pOrder[b.priority]) {
+      return pOrder[a.priority] - pOrder[b.priority];
+    }
+    return b.gapSize - a.gapSize;
+  });
+
+  const summaryDiagnosis = criticalGapsCount > 0
+    ? `Identified ${criticalGapsCount} critical role skill gap(s). Focus on HIGH priority skills to unlock full career readiness.`
+    : `High role alignment detected (${readinessScore}%). Maintain edge with hands-on practice.`;
+
+  // Save Analysis
+  const analysis = await SkillGapAnalysis.create({
+    studentId: profile._id,
+    roleId: profile.targetRole,
+    readinessScore,
+    criticalGapsCount,
+    matchedSkillsCount,
+    totalRequiredSkills: requirements.length,
+    summaryDiagnosis,
+    gaps
+  });
+
+  // Update StudentProfile with readinessScore and synthesize Career Twin
+  profile.careerReadinessScore = readinessScore;
+  profile.careerTwin = synthesizeCareerTwin(profile, readinessScore, gaps);
+  await profile.save();
+
+  return { analysis, profile };
+};
+
 export const calculateSkillGap = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const userId = (req as any).user.id;
-    const profile = await StudentProfile.findOne({ userId }).populate('skills.skillId');
+    const profile = await StudentProfile.findOne({ userId });
 
     if (!profile || !profile.targetRole) {
       return next(new ErrorResponse('Profile or Target Role not found. Please set a target career.', 400));
     }
 
-    // Fetch role requirements with populated skill prerequisites
-    const requirements = await RoleSkillRequirement.find({ roleId: profile.targetRole })
-      .populate({
-        path: 'skillId',
-        populate: { path: 'prerequisites' }
-      });
-
-    const gaps: ISkillGapItem[] = [];
-    let matchedSkillsCount = 0;
-    let criticalGapsCount = 0;
-    let totalScoreNumerator = 0;
-    let totalScoreDenominator = 0;
-
-    for (const reqSkill of requirements) {
-      const skillDoc = reqSkill.skillId as any;
-      const skillName = skillDoc.name;
-      const studentSkill = profile.skills.find(
-        s => s.skillId && (s.skillId as any)._id.toString() === skillDoc._id.toString()
-      );
-
-      const currentProficiency = studentSkill ? studentSkill.proficiency : 0;
-      const requiredProficiency = reqSkill.minimumProficiency;
-      const gapSize = Math.max(0, requiredProficiency - currentProficiency);
-
-      let classification: 'MASTERED' | 'MINOR' | 'MODERATE' | 'MAJOR' | 'CRITICAL' = 'MASTERED';
-      if (gapSize > 40) classification = 'CRITICAL';
-      else if (gapSize > 25) classification = 'MAJOR';
-      else if (gapSize > 12) classification = 'MODERATE';
-      else if (gapSize > 0) classification = 'MINOR';
-
-      // Check prerequisites status
-      let isPrerequisiteMet = true;
-      if (skillDoc.prerequisites && skillDoc.prerequisites.length > 0) {
-        for (const prereq of skillDoc.prerequisites) {
-          const prereqSkill = profile.skills.find(
-            s => s.skillId && (s.skillId as any)._id.toString() === prereq._id.toString()
-          );
-          if (!prereqSkill || prereqSkill.proficiency < 50) {
-            isPrerequisiteMet = false;
-            break;
-          }
-        }
-      }
-
-      // Assign priority
-      let priority: 'HIGH' | 'MEDIUM' | 'LOW' = 'MEDIUM';
-      if ((reqSkill.importance === 'CRITICAL' || reqSkill.importance === 'IMPORTANT') && gapSize > 20) {
-        priority = 'HIGH';
-      } else if (gapSize <= 5 || reqSkill.importance === 'OPTIONAL') {
-        priority = 'LOW';
-      }
-
-      if (gapSize === 0) matchedSkillsCount++;
-      if (classification === 'CRITICAL' && reqSkill.importance === 'CRITICAL') criticalGapsCount++;
-
-      // Weighting for readiness score
-      let weight = 1;
-      if (reqSkill.importance === 'CRITICAL') weight = 3;
-      else if (reqSkill.importance === 'IMPORTANT') weight = 2;
-      else if (reqSkill.importance === 'OPTIONAL') weight = 0.5;
-
-      totalScoreNumerator += (Math.min(currentProficiency, requiredProficiency) / requiredProficiency) * weight;
-      totalScoreDenominator += weight;
-
-      const recommendation = generateRecommendation(skillName, gapSize, reqSkill.importance);
-      const estimatedHoursToClose = Math.max(4, Math.round(gapSize * 0.8));
-
-      gaps.push({
-        skillId: skillDoc._id,
-        skillName,
-        currentProficiency,
-        requiredProficiency,
-        gapSize,
-        classification,
-        importance: reqSkill.importance,
-        priority,
-        recommendation,
-        estimatedHoursToClose,
-        isPrerequisiteMet
-      });
+    const result = await performSkillGapCalculation(profile._id);
+    if (!result) {
+      return next(new ErrorResponse('Could not calculate skill gap', 400));
     }
 
-    let readinessScore = 0;
-    if (totalScoreDenominator > 0) {
-      readinessScore = Math.round((totalScoreNumerator / totalScoreDenominator) * 100);
-    }
-
-    // Sort gaps: HIGH priority first, then descending gap size
-    gaps.sort((a, b) => {
-      const pOrder: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 };
-      if (pOrder[a.priority] !== pOrder[b.priority]) {
-        return pOrder[a.priority] - pOrder[b.priority];
-      }
-      return b.gapSize - a.gapSize;
-    });
-
-    const summaryDiagnosis = criticalGapsCount > 0
-      ? `Identified ${criticalGapsCount} critical role skill gap(s). Focus on HIGH priority skills to unlock full career readiness.`
-      : `High role alignment detected (${readinessScore}%). Maintain edge with hands-on practice.`;
-
-    // Save Analysis
-    const analysis = await SkillGapAnalysis.create({
-      studentId: profile._id,
-      roleId: profile.targetRole,
-      readinessScore,
-      criticalGapsCount,
-      matchedSkillsCount,
-      totalRequiredSkills: requirements.length,
-      summaryDiagnosis,
-      gaps
-    });
-
-    // Update StudentProfile with readinessScore and synthesize Career Twin
-    profile.careerReadinessScore = readinessScore;
-    profile.careerTwin = synthesizeCareerTwin(profile, readinessScore, gaps);
-    await profile.save();
-
-    res.status(200).json({ success: true, data: analysis });
+    res.status(200).json({ success: true, data: result.analysis });
   } catch (error) {
     next(error);
   }

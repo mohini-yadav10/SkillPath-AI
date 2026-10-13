@@ -2,31 +2,67 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCareerTarget } from '../context/CareerContext';
 import axios from 'axios';
-import { Target, Settings, Zap } from 'lucide-react';
+import {
+  Target,
+  Settings,
+  Zap,
+  Building2,
+  Briefcase,
+  BookOpen,
+  Sparkles,
+  Layers,
+  ArrowRight
+} from 'lucide-react';
+import QuestionBankLibrary from '../components/interview/QuestionBankLibrary';
 
 export default function InterviewSetup() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const { target } = useCareerTarget();
+  const [meta, setMeta] = useState<{ companies: any[]; roles: any[] }>({ companies: [], roles: [] });
+  const [showQuestionBank, setShowQuestionBank] = useState(false);
+
   const [config, setConfig] = useState({
+    company: target?.companyName || 'TCS',
+    role: target?.roleName || 'MERN Full Stack Developer',
+    sessionMode: 'ADAPTIVE_MOCK',
     type: 'TECHNICAL',
     difficulty: 'MEDIUM',
-    questionCount: 5
+    questionCount: 5,
+    skillFocus: ''
   });
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchMetaAndProfile = async () => {
       try {
         const token = localStorage.getItem('token');
-        await axios.get('http://localhost:5000/api/profile', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const [metaRes, profileRes] = await Promise.all([
+          axios.get('http://localhost:5000/api/interview/meta/companies-roles', {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          axios.get('http://localhost:5000/api/profile', {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+        ]);
+
+        if (metaRes.data.success) {
+          setMeta(metaRes.data.data);
+          // Set default company/role from meta if available
+          const companies = metaRes.data.data.companies;
+          const roles = metaRes.data.data.roles;
+          if (companies.length > 0 && !target?.companyName) {
+            setConfig(prev => ({ ...prev, company: companies[0].name }));
+          }
+          if (roles.length > 0 && !target?.roleName) {
+            setConfig(prev => ({ ...prev, role: roles[0].title }));
+          }
+        }
       } catch (err) {
-        console.error(err);
+        console.error('Failed to load profile or meta:', err);
       }
     };
-    fetchProfile();
-  }, []);
+    fetchMetaAndProfile();
+  }, [target]);
 
   const handleStart = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,94 +73,221 @@ export default function InterviewSetup() {
         headers: { Authorization: `Bearer ${token}` }
       });
       navigate(`/interview/${res.data.data._id}/active`);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert('Failed to setup interview');
+      alert(err.response?.data?.message || 'Failed to initialize interview');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-10 animate-fade-in">
-      <div className="bg-white p-8 rounded-3xl shadow-sm border border-sage/10">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-sage/20 text-forest rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Target size={32} />
-          </div>
-          <h1 className="text-3xl font-bold text-ink mb-2">Setup Interview</h1>
-          
-          <div className="inline-block bg-cream px-4 py-2 rounded-xl border border-sage/30 text-sm font-medium text-forest-dark mb-2 text-left w-full max-w-sm">
-            <div className="flex justify-between border-b border-sage/20 pb-1 mb-1">
-              <span className="text-muted text-xs uppercase tracking-wide">Target Role:</span>
-              <span className="font-bold">{target?.roleName || 'Not Selected'}</span>
+    <div className="max-w-3xl mx-auto py-8 space-y-6 animate-fade-in">
+      {/* Question Bank Modal */}
+      {showQuestionBank && (
+        <QuestionBankLibrary
+          isOpenAsModal={true}
+          onClose={() => setShowQuestionBank(false)}
+        />
+      )}
+
+      {/* Header Banner */}
+      <div className="bg-white p-8 rounded-3xl shadow-sm border border-sage/20 space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-sage/10 pb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-forest text-gold rounded-2xl flex items-center justify-center shrink-0 shadow-md">
+              <Target size={32} />
             </div>
-            <div className="flex justify-between border-b border-sage/20 pb-1 mb-1">
-              <span className="text-muted text-xs uppercase tracking-wide">Company:</span>
-              <span className="font-bold">{target?.companyName || 'Any Company'}</span>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-black text-ink tracking-tight">Virtual Interview Setup</h1>
+              <p className="text-xs sm:text-sm text-muted font-medium mt-0.5">
+                Practice with real company question banks, adaptive difficulty, and AI feedback.
+              </p>
             </div>
           </div>
-          
-          <p className="text-forest-dark/70 mt-2 text-sm">Questions will be targeted towards your specific skill gaps for this role.</p>
+
+          <button
+            type="button"
+            onClick={() => setShowQuestionBank(true)}
+            className="inline-flex items-center gap-2 bg-cream hover:bg-sage/20 text-forest font-bold px-4 py-2.5 rounded-xl border border-sage/30 text-xs transition shadow-xs"
+          >
+            <BookOpen size={15} /> Browse Question Bank
+          </button>
         </div>
 
         <form onSubmit={handleStart} className="space-y-6">
-          <div>
-            <label className="block text-sm font-bold text-forest-dark mb-2 flex items-center gap-2">
-              <Settings size={18} className="text-muted" /> Focus Area
-            </label>
-            <select
-              value={config.type}
-              onChange={(e) => setConfig({...config, type: e.target.value})}
-              className="w-full bg-cream/50 border border-sage/20 text-ink rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-forest font-medium"
-            >
-              <option value="TECHNICAL">Technical Skills Only</option>
-              <option value="HR">Behavioral / HR Only</option>
-              <option value="MIXED">Mixed (Technical + HR)</option>
-            </select>
+          {/* Company and Role Configuration */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-forest mb-1.5 flex items-center gap-1.5">
+                <Building2 size={14} /> Target Company
+              </label>
+              <select
+                value={config.company}
+                onChange={e => setConfig({ ...config, company: e.target.value })}
+                className="w-full bg-cream/40 border border-sage/30 text-ink rounded-xl px-4 py-3 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-forest"
+              >
+                <option value="">Any Company</option>
+                {meta.companies.map(c => (
+                  <option key={c.name} value={c.name}>
+                    {c.name} ({c.totalQuestions} questions)
+                  </option>
+                ))}
+                {!meta.companies.some(c => c.name === 'TCS') && (
+                  <option value="TCS">TCS (Tata Consultancy Services)</option>
+                )}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-forest mb-1.5 flex items-center gap-1.5">
+                <Briefcase size={14} /> Target Role
+              </label>
+              <select
+                value={config.role}
+                onChange={e => setConfig({ ...config, role: e.target.value })}
+                className="w-full bg-cream/40 border border-sage/30 text-ink rounded-xl px-4 py-3 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-forest"
+              >
+                <option value="">Any Technical Role</option>
+                {meta.roles.map(r => (
+                  <option key={r.title} value={r.title}>
+                    {r.title}
+                  </option>
+                ))}
+                {!meta.roles.some(r => r.title === 'MERN Full Stack Developer') && (
+                  <option value="MERN Full Stack Developer">MERN Full Stack Developer</option>
+                )}
+              </select>
+            </div>
           </div>
 
+          {/* Session Mode Selector */}
           <div>
-            <label className="block text-sm font-bold text-forest-dark mb-2 flex items-center gap-2">
-              <Zap size={18} className="text-muted" /> Difficulty Level
+            <label className="block text-xs font-bold text-forest mb-2 flex items-center gap-1.5">
+              <Layers size={14} /> Interview Mode
             </label>
-            <div className="grid grid-cols-3 gap-3">
-              {['EASY', 'MEDIUM', 'HARD'].map(diff => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+              {[
+                {
+                  id: 'ADAPTIVE_MOCK',
+                  title: 'Adaptive Mock Session',
+                  desc: 'Dynamically adapts question difficulty and follow-ups based on real-time answer evidence.'
+                },
+                {
+                  id: 'COMPANY_PRACTICE',
+                  title: 'Company Practice',
+                  desc: 'Focuses on candidate-reported questions asked at the selected target company.'
+                },
+                {
+                  id: 'SKILL_GAP_PRACTICE',
+                  title: 'Skill-Gap Targeted',
+                  desc: 'Prioritizes skills where your Career Twin detected critical gaps.'
+                },
+                {
+                  id: 'TOPIC_PRACTICE',
+                  title: 'Topic Deep Dive',
+                  desc: 'Focuses strictly on a chosen technology stack or competency.'
+                }
+              ].map(m => (
                 <button
-                  key={diff}
+                  key={m.id}
                   type="button"
-                  onClick={() => setConfig({...config, difficulty: diff})}
-                  className={`py-3 rounded-xl font-bold border transition-colors ${
-                    config.difficulty === diff 
-                      ? 'bg-forest text-white border-forest shadow-md' 
-                      : 'bg-white text-forest-dark/70 border-sage/20 hover:bg-cream/50'
+                  onClick={() => setConfig({ ...config, sessionMode: m.id })}
+                  className={`p-4 rounded-2xl border text-left transition-all ${
+                    config.sessionMode === m.id
+                      ? 'bg-forest text-cream border-forest shadow-md ring-2 ring-forest/20'
+                      : 'bg-white text-forest-dark border-sage/20 hover:bg-cream/40'
                   }`}
                 >
-                  {diff}
+                  <span className="font-bold text-sm block mb-1">{m.title}</span>
+                  <span
+                    className={`text-xs block leading-normal ${
+                      config.sessionMode === m.id ? 'text-cream/80' : 'text-muted'
+                    }`}
+                  >
+                    {m.desc}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-bold text-forest-dark mb-2">Number of Questions</label>
-            <input 
-              type="range" 
-              min="3" 
-              max="10" 
-              value={config.questionCount}
-              onChange={(e) => setConfig({...config, questionCount: parseInt(e.target.value)})}
-              className="w-full accent-forest"
-            />
-            <div className="text-center font-bold text-forest text-lg mt-2">{config.questionCount} Questions</div>
+          {/* Focus Area (Type) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-forest mb-1.5 flex items-center gap-1.5">
+                <Settings size={14} /> Question Focus
+              </label>
+              <select
+                value={config.type}
+                onChange={e => setConfig({ ...config, type: e.target.value })}
+                className="w-full bg-cream/40 border border-sage/30 text-ink rounded-xl px-4 py-3 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-forest"
+              >
+                <option value="TECHNICAL">Technical Skills Only</option>
+                <option value="HR">Behavioral / HR Only</option>
+                <option value="MIXED">Mixed (Technical + HR)</option>
+              </select>
+            </div>
+
+            {/* Difficulty Level */}
+            <div>
+              <label className="block text-xs font-bold text-forest mb-1.5 flex items-center gap-1.5">
+                <Zap size={14} /> Difficulty Preference
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {['EASY', 'MEDIUM', 'HARD'].map(diff => (
+                  <button
+                    key={diff}
+                    type="button"
+                    onClick={() => setConfig({ ...config, difficulty: diff })}
+                    className={`py-3 rounded-xl font-bold text-xs border transition-colors ${
+                      config.difficulty === diff
+                        ? 'bg-forest text-cream border-forest shadow-sm'
+                        : 'bg-white text-forest-dark border-sage/20 hover:bg-cream/50'
+                    }`}
+                  >
+                    {diff}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
-          <button 
-            type="submit" 
+          {/* Number of Questions Slider */}
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-xs font-bold text-forest">Session Length</label>
+              <span className="text-sm font-black text-forest">{config.questionCount} Questions</span>
+            </div>
+            <input
+              type="range"
+              min="3"
+              max="8"
+              value={config.questionCount}
+              onChange={e => setConfig({ ...config, questionCount: parseInt(e.target.value) })}
+              className="w-full accent-forest cursor-pointer"
+            />
+            <p className="text-[11px] text-muted mt-1">
+              Estimated duration: ~{config.questionCount * 3} minutes (3 minutes per question).
+            </p>
+          </div>
+
+          <button
+            type="submit"
             disabled={loading}
-            className="w-full bg-forest text-white py-4 rounded-xl font-bold text-lg hover:bg-forest-dark transition-colors disabled:opacity-50 mt-8"
+            className="w-full bg-forest text-cream py-4 rounded-2xl font-bold text-base hover:bg-forest-dark transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-60"
           >
-            {loading ? 'Analyzing Profile & Generating...' : 'Start Virtual Interview'}
+            {loading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-cream border-t-transparent rounded-full animate-spin" />
+                <span>Sequencing Adaptive Questions...</span>
+              </>
+            ) : (
+              <>
+                <span>Start Virtual Interview</span>
+                <ArrowRight size={18} />
+              </>
+            )}
           </button>
         </form>
       </div>

@@ -307,6 +307,12 @@ export default function LearningPath() {
                           </div>
                           
                           <h4 className="text-lg font-black text-forest leading-snug">{item.title}</h4>
+                          {item.recommendationReason && (
+                            <div className="mt-3 bg-sage/10 border border-sage/20 rounded-xl p-3 text-xs text-forest-dark font-medium flex items-start gap-2">
+                              <Zap size={14} className="text-gold shrink-0 mt-0.5" />
+                              <span><strong className="text-forest">Recommendation Reason:</strong> {item.recommendationReason}</span>
+                            </div>
+                          )}
                         </div>
 
                         {/* Mobile Status Toggle Button */}

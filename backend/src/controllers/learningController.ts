@@ -103,37 +103,61 @@ export const injectRemediationItem = async (
   studentProfileId: mongoose.Types.ObjectId,
   skillId: mongoose.Types.ObjectId,
   skillName: string,
-  assessmentScore: number
+  assessmentScore: number,
+  recommendationReason?: string
 ) => {
   try {
     const path = await LearningPath.findOne({ studentId: studentProfileId, status: 'ACTIVE' });
     if (!path) return null;
 
-    // Check if an active remediation item for this skill already exists
+    // Check if an active remediation item for this skill already exists (deduplication)
     const existing = path.items.find(
       i => i.skillId.toString() === skillId.toString() && i.isAdaptiveRemediation && i.status !== 'COMPLETED'
     );
     if (existing) return existing;
 
+    const reason = recommendationReason || `Prescribed remediation due to assessment weakness in ${skillName} (${assessmentScore}% score). Focus on foundational concepts before progressing.`;
+
     const remediationItem: ILearningPathItem = {
       skillId,
       skillName,
-      title: `⚡ Targeted Remediation Lab: ${skillName} (Assessment Score: ${assessmentScore}%)`,
+      title: `⚡ Targeted Remediation Lab: ${skillName} (${assessmentScore}% Score)`,
       type: 'REMEDIATION',
       url: `https://duckduckgo.com/?q=${encodeURIComponent(skillName + ' practice exercises tutorial')}`,
       status: 'PENDING',
-      order: 0, // Injected at the top
+      order: 1,
       estimatedHours: 8,
       isAdaptiveRemediation: true,
       priority: 'HIGH',
-      milestone: 'Adaptive Reinforcement'
+      milestone: 'Adaptive Reinforcement',
+      recommendationReason: reason
     };
 
-    // Reorder items: shift existing order values
-    path.items.forEach(i => {
-      i.order += 1;
+    // Preserve prerequisite ordering: check if this skill has prerequisites in the path
+    const skillDoc = await Skill.findById(skillId);
+    let insertIndex = 0; // Default to top priority
+
+    if (skillDoc && skillDoc.prerequisites && skillDoc.prerequisites.length > 0) {
+      const prereqIds = skillDoc.prerequisites.map((p: any) => p.toString());
+      const pendingPrereqIndices: number[] = [];
+      path.items.forEach((item, idx) => {
+        if (prereqIds.includes(item.skillId.toString()) && item.status !== 'COMPLETED') {
+          pendingPrereqIndices.push(idx);
+        }
+      });
+
+      if (pendingPrereqIndices.length > 0) {
+        // Must be placed after all pending prerequisites
+        insertIndex = Math.max(...pendingPrereqIndices) + 1;
+      }
+    }
+
+    path.items.splice(insertIndex, 0, remediationItem);
+
+    // Re-index all order numbers sequentially
+    path.items.forEach((item, idx) => {
+      item.order = idx + 1;
     });
-    path.items.unshift(remediationItem);
 
     // Recalculate total estimated hours and progress
     path.totalEstimatedHours = (path.totalEstimatedHours || 0) + 8;

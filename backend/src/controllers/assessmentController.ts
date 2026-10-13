@@ -6,6 +6,7 @@ import StudentProfile from '../models/StudentProfile';
 import Skill from '../models/Skill';
 import RoleSkillRequirement from '../models/RoleSkillRequirement';
 import { injectRemediationItem } from './learningController';
+import { performSkillGapCalculation } from './analysisController';
 import { ErrorResponse } from '../utils/errorResponse';
 
 const MAX_QUESTIONS_PER_ATTEMPT = 5;
@@ -178,6 +179,9 @@ export const submitAnswer = async (req: Request, res: Response, next: NextFuncti
       }
 
       await profile!.save();
+
+      // Feed completed assessment results into Career Twin telemetry
+      await performSkillGapCalculation(profile!._id);
 
       return res.status(200).json({
         success: true,
