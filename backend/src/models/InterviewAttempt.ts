@@ -24,12 +24,15 @@ export interface IInterviewAttempt extends Document {
     communication: number;
     overall: number;
   };
+  overallScore?: number;
   strengths?: string[];
   weaknesses?: {
     skillId?: mongoose.Types.ObjectId;
     skillName: string;
     feedback: string;
   }[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const interviewAttemptSchema = new Schema(

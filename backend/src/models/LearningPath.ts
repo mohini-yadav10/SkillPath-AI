@@ -17,6 +17,7 @@ export interface ILearningPath extends Document {
   targetRoleId: mongoose.Types.ObjectId;
   items: ILearningPathItem[];
   progress: number;
+  status?: 'ACTIVE' | 'ARCHIVED' | 'COMPLETED';
 }
 
 const learningPathItemSchema = new Schema({
@@ -35,7 +36,8 @@ const learningPathSchema = new Schema(
     studentId: { type: Schema.Types.ObjectId, ref: 'StudentProfile', required: true },
     targetRoleId: { type: Schema.Types.ObjectId, ref: 'JobRole', required: true },
     items: [learningPathItemSchema],
-    progress: { type: Number, default: 0 }
+    progress: { type: Number, default: 0 },
+    status: { type: String, enum: ['ACTIVE', 'ARCHIVED', 'COMPLETED'], default: 'ACTIVE' }
   },
   { timestamps: true }
 );

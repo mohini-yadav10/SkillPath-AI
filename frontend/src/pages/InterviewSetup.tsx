@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCareerTarget } from '../context/CareerContext';
 import axios from 'axios';
@@ -18,10 +18,9 @@ export default function InterviewSetup() {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:5000/api/profile', {
+        await axios.get('http://localhost:5000/api/profile', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        // removed
       } catch (err) {
         console.error(err);
       }

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import request from 'supertest';
@@ -10,23 +10,23 @@ import Skill from '../models/Skill';
 import Question from '../models/Question';
 import jwt from 'jsonwebtoken';
 
+let globalUserId: mongoose.Types.ObjectId;
+let testSkillId: mongoose.Types.ObjectId;
+let attemptId: string;
+
+vi.mock('../middleware/auth', () => ({
+  protect: (req: any, _res: any, next: any) => {
+    req.user = { id: globalUserId };
+    next();
+  },
+  authorize: () => (_req: any, _res: any, next: any) => next()
+}));
+
 let mongoServer: MongoMemoryServer;
 const app = express();
 
 app.use(express.json());
-
-// Mock auth middleware for the test app
-const mockAuth = (req: any, res: any, next: any) => {
-  req.user = { id: globalUserId };
-  next();
-};
-
-// Insert mock auth before routes
-app.use('/api/assessments', mockAuth, assessmentRoutes);
-
-let globalUserId: mongoose.Types.ObjectId;
-let testSkillId: mongoose.Types.ObjectId;
-let attemptId: string;
+app.use('/api/assessments', assessmentRoutes);
 
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();

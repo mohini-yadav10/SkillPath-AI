@@ -67,9 +67,9 @@ const seedAssessments = async () => {
     for (const name of skillNames) {
       let skill = await Skill.findOne({ name });
       if (!skill) {
-        skill = await Skill.create({ name, category: 'Technical' });
+        skill = await Skill.create({ name, category: 'TECHNICAL' });
       }
-      skillMap[name] = skill._id as string;
+      skillMap[name] = (skill._id as any).toString();
     }
 
     const mappedQuestions = questionsToSeed.map(q => ({

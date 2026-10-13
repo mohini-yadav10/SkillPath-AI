@@ -396,7 +396,7 @@ export default function ProctoredAssessment() {
               <button onClick={requestCamera} className="flex-1 bg-forest text-white py-3 rounded-xl font-bold hover:bg-forest-dark transition">
                 Retry Camera
               </button>
-              <button onClick={endAssessment} className="flex-1 bg-sage/20 text-forest-dark py-3 rounded-xl font-bold hover:bg-sage/30 transition">
+              <button onClick={() => endAssessment()} className="flex-1 bg-sage/20 text-forest-dark py-3 rounded-xl font-bold hover:bg-sage/30 transition">
                 End Assessment
               </button>
             </div>

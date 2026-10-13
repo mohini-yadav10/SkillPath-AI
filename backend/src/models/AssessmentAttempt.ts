@@ -30,6 +30,9 @@ export interface IAssessmentAttempt extends Document {
     reviewerNotes?: string;
     lastHeartbeat?: Date;
   };
+  status?: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const assessmentAttemptSchema = new Schema(
