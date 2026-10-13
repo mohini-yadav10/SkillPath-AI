@@ -18,6 +18,7 @@ import adminRoutes from './routes/adminRoutes';
 import interviewRoutes from './routes/interviewRoutes';
 import proctoringRoutes from './routes/proctoringRoutes';
 import analyticsRoutes from './routes/analyticsRoutes';
+import mentorRoutes from './routes/mentorRoutes';
 
 dotenv.config();
 
@@ -46,6 +47,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/interview', interviewRoutes);
 app.use('/api/proctoring', proctoringRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/mentor', mentorRoutes);
 
 // Health check
 app.get('/health', (req: Request, res: Response) => {

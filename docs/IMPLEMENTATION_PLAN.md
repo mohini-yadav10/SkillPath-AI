@@ -29,11 +29,12 @@
 2.  **Feedback Loop:** Implemented adaptive feedback loop in `assessmentController.ts` via `injectRemediationItem()` — scores below 60% automatically inject a prioritized targeted reinforcement lab directly into the student's active roadmap.
 
 ## PHASE D: AI Learning Assistant (RAG) & Mentor
-*Status: NEXT UP*
-1.  **Document Upload & Extraction:** Allow PDF syllabus/notes upload. Implement chunking and vector storage (likely expanding `ml-service`).
-2.  **AI Mentor Chat UI:** Provide a persistent assistant that uses the unified Career Twin data to provide contextual answers.
+*Status: COMPLETED*
+1.  **Document Upload & Extraction:** Implemented PDF/TXT syllabus & notes parsing with overlapping semantic chunking and metadata keyword extraction (`StudentDocument` model & `/api/mentor/documents`).
+2.  **AI Mentor Chat UI:** Built full-fidelity, persistent AI Career Mentor chat (`AIMentor.tsx` & `/api/mentor/chat`) combining RAG document snippet citations with real-time Career Twin grounding.
 
 ## PHASE E: Advanced AI Interviewer & Assessment
+*Status: NEXT UP*
 1.  **Dynamic Interviews:** Upgrade existing interview controllers to analyze weaknesses mid-session and generate adaptive follow-up questions.
 2.  **Assessment Data Feed:** Ensure assessment performance routes explicitly feed back into the Career Twin and Adaptive Roadmap engines.
 
