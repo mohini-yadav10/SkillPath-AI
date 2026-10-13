@@ -4,11 +4,14 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import request from 'supertest';
 import express from 'express';
 import analysisRoutes from '../routes/analysisRoutes';
+import learningRoutes from '../routes/learningRoutes';
 import StudentProfile from '../models/StudentProfile';
 import User from '../models/User';
 import Skill from '../models/Skill';
 import JobRole from '../models/JobRole';
 import RoleSkillRequirement from '../models/RoleSkillRequirement';
+import { injectRemediationItem } from '../controllers/learningController';
+import LearningPath from '../models/LearningPath';
 
 let mongoServer: MongoMemoryServer;
 const app = express();
@@ -26,6 +29,7 @@ vi.mock('../middleware/auth', () => ({
 
 app.use(express.json());
 app.use('/api/analysis', analysisRoutes);
+app.use('/api/learning', learningRoutes);
 
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
@@ -151,5 +155,34 @@ describe('Career Twin & Skill Graph Flow', () => {
     expect(res.body.data.careerTwin.cognitiveScores.technicalProficiency).toBeGreaterThan(0);
     expect(res.body.data.careerTwin.aiDiagnosis).toBeDefined();
     expect(res.body.data.careerTwin.nextBestAction).toBeDefined();
+  });
+
+  it('should generate an adaptive learning roadmap from skill gaps', async () => {
+    const res = await request(app).post('/api/learning/generate');
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.items.length).toBeGreaterThan(0);
+    expect(res.body.data.items[0].skillName).toBe('JavaScript');
+    expect(res.body.data.items[0].status).toBe('PENDING');
+  });
+
+  it('should adaptively inject remediation module into roadmap on low score', async () => {
+    const profile = await StudentProfile.findOne({ userId: globalUserId });
+    const jsSkill = await Skill.findOne({ name: 'JavaScript' });
+
+    const remediation = await injectRemediationItem(
+      profile!._id as mongoose.Types.ObjectId,
+      jsSkill!._id as mongoose.Types.ObjectId,
+      'JavaScript',
+      45
+    );
+
+    expect(remediation).toBeDefined();
+    expect(remediation?.isAdaptiveRemediation).toBe(true);
+    expect(remediation?.title).toContain('Targeted Remediation Lab: JavaScript');
+
+    // Verify it is now in the active LearningPath at the front
+    const updatedPath = await LearningPath.findOne({ studentId: profile!._id, status: 'ACTIVE' });
+    expect(updatedPath?.items[0].isAdaptiveRemediation).toBe(true);
   });
 });

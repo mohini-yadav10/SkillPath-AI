@@ -24,11 +24,12 @@
 3.  **Skill Gap Engine:** Refined `SkillGapAnalysis` generation to calculate exact numeric gaps vs target role, assigning HIGH/MEDIUM/LOW priorities with individualized AI actionable recommendations and estimated hours to close.
 
 ## PHASE C: Adaptive AI Learning Engine
-*Status: NEXT UP*
-1.  **Adaptive Roadmap:** Tie the Skill Gap Engine directly to the Learning Path generation.
-2.  **Feedback Loop:** Implement logic so that poor performance in an assessment automatically shifts learning priorities and injects targeted resources.
+*Status: COMPLETED*
+1.  **Adaptive Roadmap:** Tied the Skill Gap Engine directly to the Learning Path generation, ordering curriculum by prerequisite dependency and gap priority, generating targeted course, project, and challenge modules.
+2.  **Feedback Loop:** Implemented adaptive feedback loop in `assessmentController.ts` via `injectRemediationItem()` — scores below 60% automatically inject a prioritized targeted reinforcement lab directly into the student's active roadmap.
 
 ## PHASE D: AI Learning Assistant (RAG) & Mentor
+*Status: NEXT UP*
 1.  **Document Upload & Extraction:** Allow PDF syllabus/notes upload. Implement chunking and vector storage (likely expanding `ml-service`).
 2.  **AI Mentor Chat UI:** Provide a persistent assistant that uses the unified Career Twin data to provide contextual answers.
 

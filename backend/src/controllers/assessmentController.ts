@@ -5,6 +5,7 @@ import AssessmentAttempt from '../models/AssessmentAttempt';
 import StudentProfile from '../models/StudentProfile';
 import Skill from '../models/Skill';
 import RoleSkillRequirement from '../models/RoleSkillRequirement';
+import { injectRemediationItem } from './learningController';
 import { ErrorResponse } from '../utils/errorResponse';
 
 const MAX_QUESTIONS_PER_ATTEMPT = 5;
@@ -147,6 +148,9 @@ export const submitAnswer = async (req: Request, res: Response, next: NextFuncti
       await attempt.save();
 
       // Update student proficiency
+      const skillDoc = await Skill.findById(attempt.skillId);
+      const skillName = skillDoc ? skillDoc.name : 'Target Skill';
+
       const skillIndex = profile!.skills.findIndex(s => s.skillId.toString() === attempt.skillId.toString());
       if (skillIndex > -1) {
         profile!.skills[skillIndex].proficiency = attempt.score;
@@ -160,11 +164,29 @@ export const submitAnswer = async (req: Request, res: Response, next: NextFuncti
           source: 'ASSESSMENT'
         });
       }
+
+      // Phase C Feedback Loop: Adaptively inject targeted remediation if score < 60
+      let remediationInjected = false;
+      if (attempt.score < 60) {
+        const injected = await injectRemediationItem(
+          profile!._id as mongoose.Types.ObjectId,
+          attempt.skillId,
+          skillName,
+          attempt.score
+        );
+        if (injected) remediationInjected = true;
+      }
+
       await profile!.save();
 
       return res.status(200).json({
         success: true,
-        data: { completed: true, attemptId: attempt._id }
+        data: { 
+          completed: true, 
+          attemptId: attempt._id, 
+          score: attempt.score,
+          remediationInjected 
+        }
       });
     }
 
