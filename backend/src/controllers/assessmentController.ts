@@ -178,6 +178,27 @@ export const submitAnswer = async (req: Request, res: Response, next: NextFuncti
         if (injected) remediationInjected = true;
       }
 
+      // ===== GAMIFICATION: Award XP =====
+      const xpEarned = Math.round(attempt.score * 2); // Score-based XP (max 200 per assessment)
+      profile!.xp = (profile!.xp || 0) + xpEarned;
+      profile!.level = Math.max(1, Math.floor(profile!.xp / 500) + 1);
+
+      // Update learning streak
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const lastActivity = profile!.lastActivityDate ? new Date(profile!.lastActivityDate) : null;
+      if (lastActivity) {
+        lastActivity.setHours(0, 0, 0, 0);
+        const dayDiff = Math.floor((today.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24));
+        if (dayDiff === 1) profile!.learningStreak = (profile!.learningStreak || 0) + 1;
+        else if (dayDiff > 1) profile!.learningStreak = 1;
+        // dayDiff === 0 means already active today, keep streak
+      } else {
+        profile!.learningStreak = 1;
+      }
+      profile!.lastActivityDate = new Date();
+      // ===== END GAMIFICATION =====
+
       await profile!.save();
 
       // Feed completed assessment results into Career Twin telemetry
@@ -189,7 +210,10 @@ export const submitAnswer = async (req: Request, res: Response, next: NextFuncti
           completed: true, 
           attemptId: attempt._id, 
           score: attempt.score,
-          remediationInjected 
+          remediationInjected,
+          xpEarned,
+          totalXp: profile!.xp,
+          level: profile!.level
         }
       });
     }

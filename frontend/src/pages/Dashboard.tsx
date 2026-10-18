@@ -336,18 +336,20 @@ export default function Dashboard() {
                   <p className="text-xs text-muted font-medium">Verified skill attempts</p>
                 </div>
               </div>
-              <span className="text-2xl font-black text-forest">3</span>
+              <span className="text-2xl font-black text-forest">{analyticsData?.stats?.completedAssessments ?? '--'}</span>
             </div>
             
             <div className="bg-white p-4 rounded-2xl flex justify-between items-center shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center text-gold"><Activity size={20}/></div>
                 <div>
-                  <p className="font-bold text-forest-dark">Average Proficiency</p>
-                  <p className="text-xs text-muted font-medium">Across all domains</p>
+                  <p className="font-bold text-forest-dark">Average Score</p>
+                  <p className="text-xs text-muted font-medium">Across all assessments</p>
                 </div>
               </div>
-              <span className="text-2xl font-black text-forest">84%</span>
+              <span className="text-2xl font-black text-forest">
+                {analyticsData?.stats?.avgAssessmentScore != null ? `${analyticsData.stats.avgAssessmentScore}%` : '--'}
+              </span>
             </div>
             
             <button onClick={() => navigate('/assessment')} className="w-full py-4 mt-2 text-forest font-bold hover:bg-forest/5 rounded-xl transition border border-dashed border-sage flex items-center justify-center gap-2">

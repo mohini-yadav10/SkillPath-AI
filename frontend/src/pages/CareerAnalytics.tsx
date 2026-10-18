@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, TrendingUp, Target, Award, CalendarDays, BrainCircuit } from 'lucide-react';
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line } from 'recharts';
+import { BarChart3, TrendingUp, Target, Award, CalendarDays, BrainCircuit, Video, FileCheck } from 'lucide-react';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, LineChart, Line, BarChart, Bar } from 'recharts';
 import axios from 'axios';
+import { useCareerTarget } from '../context/CareerContext';
 
 export default function CareerAnalytics() {
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState<any>(null);
+  const { target } = useCareerTarget();
 
   useEffect(() => {
     const fetchAnalytics = async () => {
@@ -49,25 +51,36 @@ export default function CareerAnalytics() {
     score: item.score
   }));
 
-  const assessmentData = analytics.assessmentHistory.map((a: any, i: number) => ({
-    name: `Assmt ${i + 1}`,
+  const assessmentData = (analytics.assessmentHistory || []).map((a: any, i: number) => ({
+    name: a.name || `Assmt ${i + 1}`,
     score: a.score
+  }));
+
+  const interviewData = (analytics.interviewHistory || []).map((v: any, i: number) => ({
+    name: v.name || `Interview ${i + 1}`,
+    score: v.score
   }));
 
   const currentReadiness = analytics.currentReadiness || 0;
   const initialReadiness = readinessData[0]?.score || 0;
   const readinessChange = currentReadiness - initialReadiness;
 
+  const stats = analytics.stats || {};
+
   return (
     <div className="space-y-8 pb-12 animate-fade-in">
       <div className="mb-8">
         <h1 className="text-3xl lg:text-4xl font-black text-forest tracking-tight">Career Analytics</h1>
-        <p className="text-muted mt-2 text-lg">Track how your skills and career readiness are changing over time.</p>
+        <p className="text-muted mt-2 text-lg">
+          Tracking progress towards <strong>{target?.roleName || 'your target role'}</strong>
+          {target?.companyName ? ` at ${target.companyName}` : ''}.
+        </p>
       </div>
 
       {/* Gamification / Highlights Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-3xl border border-sage/30 shadow-sm flex flex-col justify-between">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+          className="bg-white p-6 rounded-3xl border border-sage/30 shadow-sm flex flex-col justify-between">
           <div className="flex items-start justify-between mb-4">
             <div className="w-10 h-10 bg-forest rounded-xl flex items-center justify-center text-cream">
               <TrendingUp size={20} />
@@ -78,44 +91,74 @@ export default function CareerAnalytics() {
           </div>
           <p className="text-sm text-muted font-semibold uppercase tracking-wider mb-1">Career Readiness</p>
           <h3 className="text-3xl font-black text-ink">{currentReadiness}%</h3>
-        </div>
+        </motion.div>
 
-        <div className="bg-white p-6 rounded-3xl border border-sage/30 shadow-sm flex flex-col justify-between">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+          className="bg-white p-6 rounded-3xl border border-sage/30 shadow-sm flex flex-col justify-between">
           <div className="flex items-start justify-between mb-4">
             <div className="w-10 h-10 bg-gold/20 rounded-xl flex items-center justify-center text-gold">
               <Award size={20} />
             </div>
-            <span className="text-xs font-bold text-gold uppercase tracking-widest px-2 py-1 bg-gold/10 rounded-full">Level {analytics.gamification.level}</span>
+            <span className="text-xs font-bold text-gold uppercase tracking-widest px-2 py-1 bg-gold/10 rounded-full">
+              Level {analytics.gamification.level}
+            </span>
           </div>
           <p className="text-sm text-muted font-semibold uppercase tracking-wider mb-1">Career XP</p>
-          <h3 className="text-3xl font-black text-ink">{analytics.gamification.xp}</h3>
-        </div>
+          <h3 className="text-3xl font-black text-ink">{analytics.gamification.xp.toLocaleString()}</h3>
+        </motion.div>
 
-        <div className="bg-white p-6 rounded-3xl border border-sage/30 shadow-sm flex flex-col justify-between">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+          className="bg-white p-6 rounded-3xl border border-sage/30 shadow-sm flex flex-col justify-between">
           <div className="flex items-start justify-between mb-4">
-            <div className="w-10 h-10 bg-coral/20 rounded-xl flex items-center justify-center text-coral">
-              <CalendarDays size={20} />
+            <div className="w-10 h-10 bg-sage/20 rounded-xl flex items-center justify-center text-forest">
+              <FileCheck size={20} />
             </div>
-            {analytics.gamification.learningStreak > 0 && (
-              <span className="text-xs font-bold text-coral uppercase tracking-widest flex items-center gap-1">
-                🔥 Hot Streak
+            {stats.completedAssessments > 0 && (
+              <span className="text-xs font-bold text-forest uppercase tracking-widest">
+                Avg: {stats.avgAssessmentScore}%
               </span>
             )}
           </div>
-          <p className="text-sm text-muted font-semibold uppercase tracking-wider mb-1">Learning Streak</p>
-          <h3 className="text-3xl font-black text-ink">{analytics.gamification.learningStreak} Days</h3>
-        </div>
+          <p className="text-sm text-muted font-semibold uppercase tracking-wider mb-1">Assessments Done</p>
+          <h3 className="text-3xl font-black text-ink">{stats.completedAssessments ?? 0}</h3>
+        </motion.div>
 
-        <div className="bg-forest text-cream p-6 rounded-3xl border border-forest-dark shadow-lg flex flex-col justify-between relative overflow-hidden">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+          className="bg-forest text-cream p-6 rounded-3xl border border-forest-dark shadow-lg flex flex-col justify-between relative overflow-hidden">
           <div className="absolute right-0 bottom-0 opacity-10 transform translate-x-4 translate-y-4">
             <BrainCircuit size={100} />
           </div>
-          <h3 className="text-lg font-bold text-sage mb-2 relative z-10">AI Insight</h3>
+          <h3 className="text-lg font-bold text-sage mb-2 relative z-10">
+            🔥 {analytics.gamification.learningStreak} Day Streak
+          </h3>
           <p className="text-sm font-medium leading-relaxed relative z-10">
-            {readinessChange > 0 
+            {readinessChange > 0
               ? "Your career readiness is trending upwards! Consistent learning is paying off."
-              : "Complete more learning modules and assessments to generate personalized career insights."}
+              : "Complete more modules and assessments to boost your readiness score."}
           </p>
+        </motion.div>
+      </div>
+
+      {/* XP Progress Bar */}
+      <div className="bg-white p-6 rounded-3xl border border-sage/30 shadow-sm">
+        <div className="flex justify-between items-center mb-3">
+          <div>
+            <h3 className="font-black text-forest">Level {analytics.gamification.level} Progress</h3>
+            <p className="text-xs text-muted font-medium">
+              {analytics.gamification.xp} XP / {analytics.gamification.level * 500} XP to Level {analytics.gamification.level + 1}
+            </p>
+          </div>
+          <span className="text-xs font-extrabold text-gold bg-gold/10 px-3 py-1.5 rounded-full border border-gold/30">
+            🏆 Level {analytics.gamification.level}
+          </span>
+        </div>
+        <div className="w-full bg-sage/20 rounded-full h-3 overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${Math.min(100, ((analytics.gamification.xp % 500) / 500) * 100)}%` }}
+            transition={{ duration: 1.5, ease: 'easeOut' }}
+            className="h-full rounded-full bg-gradient-to-r from-forest to-sage"
+          />
         </div>
       </div>
 
@@ -124,11 +167,10 @@ export default function CareerAnalytics() {
         <div className="bg-white p-8 rounded-3xl border border-sage/30 shadow-sm">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h2 className="text-xl font-bold text-forest">Career Readiness Over Time</h2>
+              <h2 className="text-xl font-bold text-forest">Career Readiness Trend</h2>
               <p className="text-sm text-muted">Historical projection based on your activity</p>
             </div>
           </div>
-          
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={readinessData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -140,8 +182,8 @@ export default function CareerAnalytics() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#71807B', fontSize: 12}} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{fill: '#71807B', fontSize: 12}} />
-                <Tooltip 
+                <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{fill: '#71807B', fontSize: 12}} />
+                <Tooltip
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   itemStyle={{ color: '#163C35', fontWeight: 'bold' }}
                 />
@@ -156,18 +198,48 @@ export default function CareerAnalytics() {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className="text-xl font-bold text-forest">Assessment Performance</h2>
-              <p className="text-sm text-muted">Recent assessment scores</p>
+              <p className="text-sm text-muted">Skill-by-skill scores</p>
             </div>
           </div>
-          
           <div className="h-72 w-full">
             {assessmentData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={assessmentData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <BarChart data={assessmentData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#71807B', fontSize: 11}} dy={10} />
+                  <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{fill: '#71807B', fontSize: 12}} />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    itemStyle={{ color: '#163C35', fontWeight: 'bold' }}
+                  />
+                  <Bar dataKey="score" fill="#163C35" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-sage/30 rounded-2xl">
+                <Target className="text-sage mb-2" size={32} />
+                <p className="text-muted text-sm">Take assessments to see your performance trend</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Interview Performance Chart */}
+        <div className="bg-white p-8 rounded-3xl border border-sage/30 shadow-sm">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-forest">Interview Performance</h2>
+              <p className="text-sm text-muted">Overall scores from mock interviews</p>
+            </div>
+          </div>
+          <div className="h-72 w-full">
+            {interviewData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={interviewData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#71807B', fontSize: 12}} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#71807B', fontSize: 12}} />
-                  <Tooltip 
+                  <YAxis domain={[0, 100]} axisLine={false} tickLine={false} tick={{fill: '#71807B', fontSize: 12}} />
+                  <Tooltip
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                     itemStyle={{ color: '#D6A84A', fontWeight: 'bold' }}
                   />
@@ -176,10 +248,33 @@ export default function CareerAnalytics() {
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-sage/30 rounded-2xl">
-                <Target className="text-sage mb-2" size={32} />
-                <p className="text-muted text-sm">Take more assessments to see your trend</p>
+                <Video className="text-sage mb-2" size={32} />
+                <p className="text-muted text-sm">Complete mock interviews to track your scores</p>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Summary Stats Card */}
+        <div className="bg-white p-8 rounded-3xl border border-sage/30 shadow-sm">
+          <h2 className="text-xl font-bold text-forest mb-6">Performance Summary</h2>
+          <div className="space-y-5">
+            {[
+              { label: 'Assessments Completed', value: stats.completedAssessments ?? 0, icon: FileCheck, color: 'text-forest bg-sage/20' },
+              { label: 'Avg. Assessment Score', value: `${stats.avgAssessmentScore ?? 0}%`, icon: Target, color: 'text-gold bg-gold/10' },
+              { label: 'Interviews Completed', value: stats.completedInterviews ?? 0, icon: Video, color: 'text-forest bg-sage/20' },
+              { label: 'Avg. Interview Score', value: `${stats.avgInterviewScore ?? 0}%`, icon: TrendingUp, color: 'text-gold bg-gold/10' },
+            ].map((stat, i) => (
+              <div key={i} className="flex items-center justify-between p-4 bg-cream/60 rounded-2xl">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${stat.color}`}>
+                    <stat.icon size={18} />
+                  </div>
+                  <span className="font-semibold text-forest-dark text-sm">{stat.label}</span>
+                </div>
+                <span className="font-black text-forest text-lg">{stat.value}</span>
+              </div>
+            ))}
           </div>
         </div>
       </div>

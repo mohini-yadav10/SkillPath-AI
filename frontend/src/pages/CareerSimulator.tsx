@@ -3,12 +3,14 @@ import { motion } from 'framer-motion';
 import { Activity, Target, ArrowRight, Zap, ArrowUpCircle } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useCareerTarget } from '../context/CareerContext';
 
 export default function CareerSimulator() {
   const [loading, setLoading] = useState(true);
   const [analysis, setAnalysis] = useState<any>(null);
   const [simulatedSkills, setSimulatedSkills] = useState<Record<string, number>>({});
   const navigate = useNavigate();
+  const { target } = useCareerTarget();
 
   useEffect(() => {
     const fetchAnalysis = async () => {
@@ -122,7 +124,9 @@ export default function CareerSimulator() {
           ESTIMATED SIMULATION
         </div>
         <h1 className="text-3xl lg:text-4xl font-black text-forest tracking-tight">What-if Career Simulator</h1>
-        <p className="text-muted mt-2 text-lg">Simulate hypothetical skill improvements to see how they impact your career readiness.</p>
+        <p className="text-muted mt-2 text-lg">
+          Simulate hypothetical skill improvements for <strong>{target?.roleName || 'your target role'}</strong>.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

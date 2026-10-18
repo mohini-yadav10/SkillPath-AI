@@ -16,27 +16,41 @@ export const getAnalyticsOverview = async (req: Request, res: Response, next: Ne
       return next(new ErrorResponse('Student profile not found', 404));
     }
 
-    // Historical Assessments
-    const assessments = await AssessmentAttempt.find({ userId }).sort({ createdAt: 1 }).limit(10);
-    const assessmentHistory = assessments.map(a => ({
+    // Historical Assessments (query by studentId for accuracy)
+    const assessments = await AssessmentAttempt.find({ studentId: profile._id, isCompleted: true })
+      .populate('skillId', 'name')
+      .sort({ createdAt: 1 })
+      .limit(20);
+
+    const assessmentHistory = assessments.map((a, i) => ({
       date: a.createdAt,
-      score: a.score,
+      score: a.score || 0,
+      name: (a.skillId as any)?.name || `Assessment ${i + 1}`,
       status: a.status
     }));
 
+    // Real stats from completed assessments
+    const completedAssessmentCount = assessments.length;
+    const avgAssessmentScore = completedAssessmentCount > 0
+      ? Math.round(assessments.reduce((sum, a) => sum + (a.score || 0), 0) / completedAssessmentCount)
+      : 0;
+
     // Historical Interviews
     const interviews = await InterviewAttempt.find({ userId }).sort({ createdAt: 1 }).limit(10);
-    const interviewHistory = interviews.map(i => ({
-      date: i.createdAt,
-      score: i.overallScore || 0,
-      status: i.status
+    const interviewHistory = interviews.map((i, idx) => ({
+      date: (i as any).createdAt,
+      score: (i as any).overallScore || 0,
+      name: `Interview ${idx + 1}`,
+      status: (i as any).status
     }));
 
-    // Readiness History (Mocked historical data using recent activities for now, assuming actual readiness history isn't stored as a timeseries yet)
-    // We will generate a trend line leading up to the current score
+    const completedInterviewCount = interviews.filter((i: any) => i.status === 'COMPLETED').length;
+    const avgInterviewScore = completedInterviewCount > 0
+      ? Math.round(interviews.reduce((sum: number, i: any) => sum + (i.overallScore || 0), 0) / completedInterviewCount)
+      : 0;
+
+    // Readiness History — synthesized trend leading to current score
     const currentReadiness = profile.careerReadinessScore || 0;
-    
-    // Fake a 4-week trend for the UI to be populated, ideally we'd query a Timeseries collection
     const readinessHistory = [
       { date: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(), score: Math.max(0, currentReadiness - 15) },
       { date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(), score: Math.max(0, currentReadiness - 8) },
@@ -50,6 +64,12 @@ export const getAnalyticsOverview = async (req: Request, res: Response, next: Ne
         readinessHistory,
         assessmentHistory,
         interviewHistory,
+        stats: {
+          completedAssessments: completedAssessmentCount,
+          avgAssessmentScore,
+          completedInterviews: completedInterviewCount,
+          avgInterviewScore
+        },
         gamification: {
           xp: profile.xp || 0,
           level: profile.level || 1,

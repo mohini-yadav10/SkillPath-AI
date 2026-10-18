@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useCareerTarget } from '../../context/CareerContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, 
@@ -28,6 +29,7 @@ import {
 
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, logout } = useAuth();
+  const { target } = useCareerTarget();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -95,16 +97,28 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
       <motion.aside
         className={`fixed lg:static top-0 left-0 h-full w-72 lg:w-[280px] bg-white text-muted z-50 flex flex-col transition-transform duration-300 ease-in-out lg:translate-x-0 lg:my-4 lg:ml-4 lg:rounded-3xl shadow-2xl lg:shadow-xl lg:h-[calc(100vh-32px)] border border-sage/30 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <div className="p-8 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-sage/20 flex items-center justify-center text-forest shadow-sm transform -rotate-6">
-              <Compass size={22} strokeWidth={2.5} />
+        <div className="p-6 flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-sage/20 flex items-center justify-center text-forest shadow-sm transform -rotate-6">
+                <Compass size={22} strokeWidth={2.5} />
+              </div>
+              <h1 className="text-xl font-black tracking-tight text-forest">SkillPath AI</h1>
             </div>
-            <h1 className="text-xl font-black tracking-tight text-forest">SkillPath AI</h1>
+            <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-muted hover:text-forest">
+              <X size={24} />
+            </button>
           </div>
-          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-muted hover:text-forest">
-            <X size={24} />
-          </button>
+          {/* Live target badge */}
+          {target?.roleName && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-forest/8 border border-sage/30 rounded-xl text-xs font-bold text-forest">
+              <Target size={12} className="shrink-0 text-gold" />
+              <span className="truncate">{target.roleName}</span>
+              {target.companyName && (
+                <span className="text-muted font-medium truncate">· {target.companyName}</span>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto py-4 custom-scrollbar px-6 space-y-8">
