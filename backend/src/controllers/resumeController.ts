@@ -4,10 +4,10 @@ import StudentProfile from '../models/StudentProfile';
 import Skill from '../models/Skill';
 import { ErrorResponse } from '../utils/errorResponse';
 
-// pdf-parse exports differently depending on the bundler; handle both cases
-const pdfParseModule = require('pdf-parse');
-const pdfParse: (buffer: Buffer) => Promise<{ text: string }> =
-  typeof pdfParseModule === 'function' ? pdfParseModule : pdfParseModule.default;
+// Import pdf-parse core directly to avoid ESM/CJS wrapper issues in tsx
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pdfParse: (buffer: Buffer) => Promise<{ text: string }> = require('pdf-parse/lib/pdf-parse');
+
 
 
 // Setup multer for memory storage
