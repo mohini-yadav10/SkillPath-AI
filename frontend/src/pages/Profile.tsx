@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { Star, FileText, Settings, ShieldCheck, Mail, Shield, BookOpen, GraduationCap, Building2 } from 'lucide-react';
+import { Star, FileText, Settings, ShieldCheck, Mail, Shield, BookOpen, GraduationCap, Building2, Award, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useCareerTarget } from '../context/CareerContext';
 
 export default function Profile() {
   const { user } = useAuth();
+  const { target } = useCareerTarget();
   const [profile, setProfile] = useState<any>(null);
   const [allSkills, setAllSkills] = useState<any[]>([]);
   const [selectedSkill, setSelectedSkill] = useState('');
@@ -87,14 +89,41 @@ export default function Profile() {
             </div>
           </div>
           
-          <div className="flex gap-4 mt-6">
+          <div className="flex flex-wrap gap-3 mt-6">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-sage/10 text-forest rounded-lg text-xs font-bold uppercase tracking-wider border border-sage/20">
               <ShieldCheck size={14} /> Active Account
             </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-sage/10 text-forest-dark/70 rounded-lg text-xs font-bold uppercase tracking-wider border border-sage/20">
               <GraduationCap size={14} /> {user?.role || 'Student'}
             </span>
+            {/* XP / Level Badge */}
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gold/10 text-forest rounded-lg text-xs font-bold uppercase tracking-wider border border-gold/30">
+              <Award size={14} className="text-gold" /> Level {profile?.level || 1} · {(profile?.xp || 0).toLocaleString()} XP
+            </span>
+            {target?.roleName && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-forest/10 text-forest rounded-lg text-xs font-bold uppercase tracking-wider border border-forest/20">
+                <TrendingUp size={14} /> {target.roleName}
+              </span>
+            )}
           </div>
+
+          {/* XP Progress Bar */}
+          {(profile?.xp !== undefined) && (
+            <div className="mt-4">
+              <div className="flex justify-between text-xs font-bold text-muted mb-1">
+                <span>XP Progress to Level {(profile?.level || 1) + 1}</span>
+                <span>{profile?.xp % 500}/{500} XP</span>
+              </div>
+              <div className="w-full bg-sage/20 rounded-full h-2 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(100, ((profile?.xp % 500) / 500) * 100)}%` }}
+                  transition={{ duration: 1.5, ease: 'easeOut' }}
+                  className="h-full rounded-full bg-gradient-to-r from-forest to-sage"
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

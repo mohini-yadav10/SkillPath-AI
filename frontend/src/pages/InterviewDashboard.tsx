@@ -23,11 +23,13 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import QuestionBankLibrary from '../components/interview/QuestionBankLibrary';
+import { useCareerTarget } from '../context/CareerContext';
 
 export default function InterviewDashboard() {
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showQuestionBank, setShowQuestionBank] = useState(false);
+  const { target } = useCareerTarget();
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -136,8 +138,8 @@ export default function InterviewDashboard() {
             <Building2 size={20} />
           </div>
           <div>
-            <span className="text-[10px] uppercase font-bold text-muted block">Company Sourced</span>
-            <span className="text-xl font-black text-emerald-800">TCS / Top Tech</span>
+            <span className="text-[10px] uppercase font-bold text-muted block">Target Company</span>
+            <span className="text-xl font-black text-emerald-800 truncate max-w-[120px] block">{target?.companyName || 'Any Company'}</span>
           </div>
         </div>
 
