@@ -1,9 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
-const pdfParse = require('pdf-parse');
 import StudentProfile from '../models/StudentProfile';
 import Skill from '../models/Skill';
 import { ErrorResponse } from '../utils/errorResponse';
+
+// pdf-parse exports differently depending on the bundler; handle both cases
+const pdfParseModule = require('pdf-parse');
+const pdfParse: (buffer: Buffer) => Promise<{ text: string }> =
+  typeof pdfParseModule === 'function' ? pdfParseModule : pdfParseModule.default;
+
 
 // Setup multer for memory storage
 const storage = multer.memoryStorage();
