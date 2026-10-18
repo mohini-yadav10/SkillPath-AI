@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { FolderKanban, Github, ExternalLink, Zap, Target, Clock, Star, Code2, Database, Globe, Shield, Brain, Layers } from 'lucide-react';
+import { FolderKanban, GitBranch, ExternalLink, Zap, Target, Clock, Star, Code2, Database, Globe, Shield, Brain, Layers } from 'lucide-react';
 import { useCareerTarget } from '../context/CareerContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -372,7 +372,7 @@ export default function Projects() {
                   rel="noreferrer"
                   className="flex-1 flex items-center justify-center gap-2 bg-forest text-cream font-bold px-4 py-3 rounded-xl hover:bg-forest-dark transition text-sm"
                 >
-                  <Github size={15} /> Browse Examples
+                  <GitBranch size={15} /> Browse Examples
                 </a>
                 <button
                   onClick={() => navigate('/learning')}
